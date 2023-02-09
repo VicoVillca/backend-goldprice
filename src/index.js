@@ -4,10 +4,13 @@ const jsdom = require("jsdom");
 const app = express();
 const port = process.env.PORT || 3000;
 console.log("inciamos");
-app.get("/prueba", (req, res) => {
+app.get("/", (req, res) => {
+  console.log("saludamos");
   res.send("Hello World!");
 });
+
 app.get("/oro", async (req, res) => {
+  console.log("consultamos le precio del oro");
   try {
     // Abrimos una instancia del puppeteer y accedemos a la url de google
     const browser = await puppeteer.launch();
@@ -28,7 +31,6 @@ app.get("/oro", async (req, res) => {
         const element = c[i];
         const asqui = element.charCodeAt(0);
         if (asqui != 9 && asqui != 10 && asqui != 32) {
-          //console.log(typeof element+"-"+element+"("+element.charCodeAt(0)+")");
           x = x + element;
           sw = 1;
         } else {
