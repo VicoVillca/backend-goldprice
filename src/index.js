@@ -1,5 +1,5 @@
 const express = require("express");
-var cors = require("cors");
+const cors = require("cors");
 const axios = require("axios");
 const cheerio = require("cheerio");
 const app = express();
@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
   console.log("saludamos");
   res.send("Hello World! :)");
 });
-app.post("/prueba",  (req, res) => {
+app.get("/prueba",  (req, res) => {
   console.log("prueba");
   try {
     axios.get("https://www.kitco.com/gbl/es/index.html").then(({ data }) => {
