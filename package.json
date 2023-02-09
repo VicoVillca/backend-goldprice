@@ -1,0 +1,26 @@
+{
+  "name": "backend-goldprice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VicoVillca/backend-goldprice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/VicoVillca/backend-goldprice/issues"
+  },
+  "homepage": "https://github.com/VicoVillca/backend-goldprice#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsdom": "^21.1.0",
+    "puppeteer": "^19.6.3"
+  }
+}
