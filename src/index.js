@@ -1,65 +1,49 @@
-const puppeteer = require("puppeteer");
 const express = require("express");
-const jsdom = require("jsdom");
+
+const axios = require("axios");
+const cheerio = require("cheerio");
 const app = express();
 const port = process.env.PORT || 3000;
 console.log("inciamos");
+
 app.get("/", (req, res) => {
   console.log("saludamos");
-  res.send("Hello World!");
+  res.send("Hello World! :)");
 });
-
-app.get("/oro", async (req, res) => {
-  console.log("consultamos le precio del oro");
+app.get("/prueba", (req, res) => {
+  console.log("prueba");
   try {
-    // Abrimos una instancia del puppeteer y accedemos a la url de google
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    const response = await page.goto("https://www.kitco.com/gbl/es/index.html");
-    const body = await response.text();
-    const {
-      window: { document },
-    } = new jsdom.JSDOM(body);
-
-    const elem = document.querySelectorAll("table");
-
-    if (elem.length > 6) {
-      const c = elem[6].textContent;
-      let x = "";
-      let sw = 0;
-      for (let i = 0; i < c.length; i++) {
-        const element = c[i];
-        const asqui = element.charCodeAt(0);
-        if (asqui != 9 && asqui != 10 && asqui != 32) {
-          x = x + element;
-          sw = 1;
-        } else {
-          if (asqui == 10 && sw == 1) {
-            x = x + ",";
-            sw = 0;
-          }
-        }
+    axios.get("https://www.kitco.com/gbl/es/index.html").then(({ data }) => {
+      const $ = cheerio.load(data);
+      const fecha = $("b")
+        .map((_, product) => {
+          const $product = $(product);
+          return $product.text();
+        })
+        .toArray();
+      const pokemonNames = $("td.data")
+        .map((_, product) => {
+          const $product = $(product);
+          return $product.text();
+        })
+        .toArray();
+      //res.send(pokemonNames[0]);
+      if (fecha.length > 0 && pokemonNames.length > 1) {
+        res.send(
+          "{'fecha':'" +
+            fecha[0] +
+            "','compra':" +
+            pokemonNames[0] +
+            ",'venta':" +
+            pokemonNames[1] +
+            "}"
+        );
+      } else {
+        res.send("elementos no encontrados");
       }
-      const array = x.split(",");
-      console.log("{");
-      console.log("'fecha' : " + array[1] + ",");
-      console.log("'compra' : " + Number(array[4]) + ",");
-      console.log("'venta' : " + Number(array[5]));
-      console.log("}");
-      res.send(
-        "{'fecha':" +
-          array[1] +
-          ",'compra' : " +
-          Number(array[4]) +
-          ",'venta' : " +
-          Number(array[5]) +
-          "}"
-      );
-    } else {
-      res.send("erro al obtener el precio");
-    }
-    await browser.close();
+    });
   } catch (error) {
+    console.log(error);
     res.send(error);
   }
 });

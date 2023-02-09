@@ -1,4 +1,6 @@
 # backend-goldprice
+
+gold-price
 https://gold-price.fly.dev/
 # Logs
 https://fly.io/apps/gold-price/monitoring
