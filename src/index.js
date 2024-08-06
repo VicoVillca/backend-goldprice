@@ -8,45 +8,48 @@ app.use(cors());
 
 const port = process.env.PORT || 3000;
 
-// Función para verificar si una cadena contiene puntos y números
-function contienePuntosYNumeros(cadena) {
-  const tienePunto = /\./;
-  const tieneNumero = /\d/;
-  return tienePunto.test(cadena) && tieneNumero.test(cadena);
+// Función para verificar si una cadena contiene solo puntos, números y comas
+function contienePuntosNumerosYComas(cadena) {
+  const regex = /^[\d.,]+$/;
+  return regex.test(cadena);
 }
-
-// Ruta raíz
-app.get("/", (req, res) => {
-  console.log("saludamos");
-  res.send("Hello World! :)");
-});
 
 // Ruta de prueba
 app.get("/prueba", async (req, res) => {
-  console.log("prueba");
   try {
     const { data } = await axios.get("https://www.kitco.com");
     const $ = cheerio.load(data);
-    const hhh = $("h3")
-      .map((_, product) => $(product).text())
+
+    const elementos = $("span")
+      .map((_, element) => $(element).text())
       .toArray();
+    
+    const filtrado = elementos.filter(contienePuntosNumerosYComas);
 
-    const filtrado = hhh.filter(contienePuntosYNumeros);
-
-    // Imprimir el resultado filtrado
     console.log(filtrado);
-    console.log("holap");
 
     if (filtrado.length > 1) {
-      const fecha = new Date();
+      const fechaHoraActual = new Date();
+      const opciones = {
+        timeZone: 'America/La_Paz',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      };
+      const horaExacta = fechaHoraActual.toLocaleString('es-BO', opciones);
+
       const responseData = {
         success: true,
         data: {
-          fecha: fecha.toISOString(),
-          compra: filtrado[0],
-          venta: filtrado[1],
+          fecha: horaExacta,
+          array: filtrado,
         },
       };
+
       res.json(responseData);
     } else {
       res.json({ success: false, message: "Datos no encontrados!" });
@@ -58,5 +61,5 @@ app.get("/prueba", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log("Servidor escuchando en el puerto " + port);
+  console.log(`Servidor escuchando en el puerto ${port}`);
 });
