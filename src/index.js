@@ -8,27 +8,27 @@ app.use(cors());
 
 const port = process.env.PORT || 3000;
 
-// Función para verificar si una cadena contiene solo puntos, números y comas
-function contienePuntosNumerosYComas(cadena) {
-  const regex = /^[\d.,]+$/;
-  return regex.test(cadena);
-}
-
 // Ruta de prueba
 app.get("/prueba", async (req, res) => {
   try {
-    const { data } = await axios.get("https://www.kitco.com");
+    // Realizamos una solicitud HTTP a la página
+    const { data } = await axios.get("https://www.kitco.com/charts/gold");
+    
+    // Cargamos el HTML con Cheerio
     const $ = cheerio.load(data);
-
-    const elementos = $("span")
+    
+    // Extraemos los scripts que contienen el JSON
+    const scripts = $("script")
       .map((_, element) => $(element).text())
       .toArray();
-    
-    const filtrado = elementos.filter(contienePuntosNumerosYComas);
 
-    console.log(filtrado);
+    // Verificamos si encontramos scripts
+    if (scripts.length > 1) {
+      const json = JSON.parse(scripts[scripts.length - 1]);
+      const metalQuote = json.props.pageProps.dehydratedState.queries.find(query => query.state.data.GetMetalQuoteV3);
+      const goldData = metalQuote.state.data.GetMetalQuoteV3.results[0];
 
-    if (filtrado.length > 1) {
+      // Obtenemos la fecha y hora actual
       const fechaHoraActual = new Date();
       const opciones = {
         timeZone: 'America/La_Paz',
@@ -42,15 +42,14 @@ app.get("/prueba", async (req, res) => {
       };
       const horaExacta = fechaHoraActual.toLocaleString('es-BO', opciones);
 
-      const responseData = {
+      // Respondemos con los datos solicitados
+      res.json({
         success: true,
         data: {
           fecha: horaExacta,
-          array: filtrado,
+          array: [goldData.ask, goldData.bid],
         },
-      };
-
-      res.json(responseData);
+      });
     } else {
       res.json({ success: false, message: "Datos no encontrados!" });
     }
@@ -63,3 +62,4 @@ app.get("/prueba", async (req, res) => {
 app.listen(port, () => {
   console.log(`Servidor escuchando en el puerto ${port}`);
 });
+
