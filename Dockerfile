@@ -1,7 +1,7 @@
 # Etapa de construcción
 FROM node:14-alpine as builder
 
-# Instalar dependencias necesarias para la construcción
+# Instalar dependencias necesarias (curl, python3, build-base, pkgconfig)
 RUN apk add --no-cache curl python3 build-base pkgconfig
 
 # Instalar Volta (gestor de versiones de Node)
