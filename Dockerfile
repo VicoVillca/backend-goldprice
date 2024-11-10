@@ -1,20 +1,25 @@
 # Etapa de construcción
 FROM node:14-alpine as builder
 
-# Instalar dependencias necesarias (curl, python3, build-base, pkgconfig)
-RUN apk add --no-cache curl python3 build-base pkgconfig
+# Instalar dependencias necesarias
+RUN apk add --no-cache curl python3 build-base pkgconfig bash
 
-# Instalar Volta (gestor de versiones de Node)
-RUN curl https://get.volta.sh | bash
-ENV VOLTA_HOME /root/.volta
-ENV PATH /root/.volta/bin:$PATH
+# Descargar el script de Volta y ejecutarlo
+RUN curl -sSL https://get.volta.sh -o /tmp/volta-install.sh && \
+    bash /tmp/volta-install.sh
+
+# Establecer las variables de entorno de Volta
+ENV VOLTA_HOME=/root/.volta
+ENV PATH=$VOLTA_HOME/bin:$PATH
+
+# Instalar Node.js usando Volta
 RUN volta install node@14.17.5
 
-# Crear directorio de la aplicación y copiar archivos
+# Crear el directorio de trabajo y copiar los archivos
 WORKDIR /app
 COPY . .
 
-# Instalar las dependencias, sin incluir devDependencies
+# Instalar las dependencias, incluyendo devDependencies
 RUN npm install --production=false
 
 # Etapa final (imagen más ligera)
