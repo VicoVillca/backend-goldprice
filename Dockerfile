@@ -1,36 +1,38 @@
-FROM debian:bullseye as builder
+# Etapa de construcción
+FROM node:14-alpine as builder
 
-ARG NODE_VERSION=14.17.5
+# Instalar dependencias necesarias para la construcción
+RUN apk add --no-cache curl python3 build-base pkgconfig
 
-RUN apt-get update; apt install -y curl python-is-python3 pkg-config build-essential
+# Instalar Volta (gestor de versiones de Node)
 RUN curl https://get.volta.sh | bash
 ENV VOLTA_HOME /root/.volta
 ENV PATH /root/.volta/bin:$PATH
-RUN volta install node@${NODE_VERSION}
+RUN volta install node@14.17.5
 
-#######################################################################
-
-RUN mkdir /app
+# Crear directorio de la aplicación y copiar archivos
 WORKDIR /app
-
-# NPM will not install any package listed in "devDependencies" when NODE_ENV is set to "production",
-# to install all modules: "npm install --production=false".
-# Ref: https://docs.npmjs.com/cli/v9/commands/npm-install#description
-
-ENV NODE_ENV production
-
 COPY . .
 
-RUN npm install
-FROM debian:bullseye
+# Instalar las dependencias, sin incluir devDependencies
+RUN npm install --production=false
 
+# Etapa final (imagen más ligera)
+FROM node:14-alpine
+
+# Etiqueta de Fly.io
 LABEL fly_launch_runtime="nodejs"
 
+# Copiar solo lo necesario de la etapa anterior (Volta y los archivos de la app)
 COPY --from=builder /root/.volta /root/.volta
 COPY --from=builder /app /app
 
+# Establecer el directorio de trabajo
 WORKDIR /app
+
+# Definir el entorno y la variable PATH para Node.js
 ENV NODE_ENV production
 ENV PATH /root/.volta/bin:$PATH
 
+# Ejecutar la aplicación en producción
 CMD [ "npm", "run", "start" ]
