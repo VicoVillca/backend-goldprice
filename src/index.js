@@ -2,8 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const crypto = require('crypto');
+const PASSWORD_MD5 = '1870cb7cee0bd66626445af488c1ef7f'; // MD5 de "password"
 
 const app = express();
+app.use(express.json());           // Para application/json
+app.use(express.urlencoded({ extended: true })); // Para x-www-form-urlencoded
+
+// 2. Luego CORS (si lo usas)
 app.use(cors());
 
 const port = process.env.PORT || 3000;
@@ -56,6 +62,53 @@ app.get("/prueba", async (req, res) => {
   } catch (error) {
     console.error("Error:", error.message);
     res.json({ success: false, message: "Error al obtener los datos" });
+  }
+});
+
+app.post("/get-html", async (req, res) => {
+  try {
+    // Obtener la URL del cuerpo de la solicitud
+    const { url, password } = req.body;
+    
+    // Validar que se proporcionó una URL
+    if (!url && !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Por favor, proporciona una URL en el cuerpo de la solicitud"
+      });
+    }
+
+    const passwordMd5 = crypto.createHash('md5').update(password).digest('hex');
+    
+    if (passwordMd5 !== PASSWORD_MD5) {
+      return res.status(401).json({
+        success: false,
+        message: "Contraseña incorrecta"
+      });
+    }
+
+    // Realizamos una solicitud HTTP a la página (igual que en /prueba)
+    const { data } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    res.json({
+      success: true,
+      url: url,
+      html: data, // HTML completo y crudo
+      length: data.length,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error("Error:", error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Error al obtener el HTML",
+      error: error.message 
+    });
   }
 });
 
